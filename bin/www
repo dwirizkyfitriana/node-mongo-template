@@ -1,0 +1,114 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+const cluster = require('cluster') // for clustering
+const numCPUs = require('os').cpus.length // for clustering
+
+const app = require('../app')
+const debug = require('debug')('apps-server:server')
+const http = require('http')
+let server = ''
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+const port = normalizePort(process.env.PORT || '3000')
+app.set('port', port)
+
+/**
+ * IMPORTANT NOTE: Comment out the cluster code section below and uncomment server listen section if you dont' want to use clustering
+ */
+
+// OPTION 1: WITH CLUSTER
+
+if (cluster.isPrimary) {
+    console.log(`[CLUSTER]: Primary ${process.pid} is running`)
+    console.log('[CLUSTER]: Number of CPUs', numCPUs)
+
+    // Fork workers
+    for (let i = 0; i < numCPUs; i++) {
+        cluster.fork()
+    }
+
+    cluster.on('exit', (worker, code, signal) => {
+        console.log(`[CLUSTER]: Worker ${worker.process.pid} died`)
+        cluster.fork()
+    })
+} else {
+    // Workers can share any TCP connection
+    // In this case it is an HTTP server
+
+    server = http.createServer(app)
+    server.listen(port)
+
+    console.log(`[CLUSTER]: Worker ${process.pid} started at port ${port}`)
+}
+
+// OPTION 2: WITHOUT CLUSTER
+
+/**
+ * Create HTTP server.
+ */
+
+// server = http.createServer(app)
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+// server.listen(port)
+// server.on('error', onError)
+// server.on('listening', onListening)
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+const normalizePort = (port) => {
+    port = parseInt(port, 10)
+
+    if (isNaN(port)) return port // named pipe
+
+    if (port >= 0) return port // port number
+
+    return false
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+const onError = (error) => {
+    if (error.syscall !== 'listen') {
+        throw error
+    }
+
+    const bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port
+
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges')
+            process.exit(1)
+            break
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use')
+            process.exit(1)
+            break
+        default:
+            throw error
+    }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+const onListening = () => {
+    const addr = server.address()
+    const bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port
+    debug('Listening on ' + bind)
+}

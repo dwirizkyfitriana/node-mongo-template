@@ -1,0 +1,29 @@
+{
+    "server_port": 3000,
+    "mongodb_collections": {
+        "users": "users"
+    },
+    "mongodb_settings": {
+        "use_new_url_parser": true
+    },
+    "session": {
+        "name": "sessionID",
+        "max_age": 1800000
+    },
+    "allowed_origins": [
+        "localhost:8080"
+    ],
+    "token_validity": {
+        "password_reset_token_valid_for": 3600000
+    },
+    "logging": {
+        "mongodb_collection": "server_error_log",
+        "combined_log_file_name": "combined.log",
+        "error_log_file_name": "error.log",
+        "exception_log_file_name": "exceptions.log"
+    },
+    "frontend_urls": {
+        "email_confirmation_base_url": "https://localhost:8080/#/email-confirmation",
+        "password_reset_base_url": "https://localhost:8080/#/password-reset"
+    }
+}
